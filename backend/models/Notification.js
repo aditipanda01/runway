@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
   userId: {
@@ -113,4 +113,5 @@ notificationSchema.virtual('timeAgo').get(function() {
 // Ensure virtual fields are serialized
 notificationSchema.set('toJSON', { virtuals: true });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+const Notification = mongoose.model('Notification', notificationSchema);
+export default Notification;

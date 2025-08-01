@@ -1,9 +1,9 @@
-const connectDB = require('../utils/db');
-const User = require('../../models/User');
-const Design = require('../../models/Design');
-const Collaboration = require('../../models/Collaboration');
-const { authenticateToken } = require('../utils/auth');
-const Joi = require('joi');
+import connectDB from "../utils/db.js";
+import User from "../../models/User.js";
+import Design from "../../models/Design.js";
+import Collaboration from "../../models/Collaboration.js";
+import { authenticateToken } from "../utils/auth.js";
+import Joi from "joi";
 
 // Validation schema for profile update
 const updateProfileSchema = Joi.object({

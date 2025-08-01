@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const collaborationSchema = new mongoose.Schema({
   designId: {
@@ -135,4 +135,5 @@ collaborationSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Collaboration', collaborationSchema);
+const Collaboration = mongoose.model('Collaboration', collaborationSchema);
+export default Collaboration;

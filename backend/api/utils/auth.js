@@ -1,8 +1,8 @@
-const jwt = require('jsonwebtoken');
-const User = require('../../models/User');
+import jwt from "jsonwebtoken";
+import User from "../../models/User.js";
 
 // Generate JWT token
-const generateToken = (userId, userType, email) => {
+export const generateToken = (userId, userType, email) => {
   return jwt.sign(
     { 
       userId, 
@@ -15,7 +15,7 @@ const generateToken = (userId, userType, email) => {
 };
 
 // Verify JWT token middleware
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -81,7 +81,7 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Check if user is company
-const requireCompany = (req, res, next) => {
+export const requireCompany = (req, res, next) => {
   if (req.userType !== 'company') {
     return res.status(403).json({
       success: false,
@@ -95,7 +95,7 @@ const requireCompany = (req, res, next) => {
 };
 
 // Check if user is individual
-const requireIndividual = (req, res, next) => {
+export const requireIndividual = (req, res, next) => {
   if (req.userType !== 'individual') {
     return res.status(403).json({
       success: false,
@@ -109,7 +109,7 @@ const requireIndividual = (req, res, next) => {
 };
 
 // Optional authentication (doesn't fail if no token)
-const optionalAuth = async (req, res, next) => {
+export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -130,12 +130,4 @@ const optionalAuth = async (req, res, next) => {
     // Continue without authentication
     next();
   }
-};
-
-module.exports = {
-  generateToken,
-  authenticateToken,
-  requireCompany,
-  requireIndividual,
-  optionalAuth
 };

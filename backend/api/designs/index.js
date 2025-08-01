@@ -1,10 +1,10 @@
-const connectDB = require('../utils/db');
-const Design = require('../../models/Design');
-const User = require('../../models/User');
-const Notification = require('../../models/Notification');
-const { authenticateToken, optionalAuth } = require('../utils/auth');
-const { sendDesignLikedSMS } = require('../utils/sms');
-const Joi = require('joi');
+import connectDB from "../utils/db.js";
+import Design from "../../models/Design.js";
+import User from "../../models/User.js";
+import Notification from "../../models/Notification.js";
+import { authenticateToken, optionalAuth } from "../utils/auth.js";
+import { sendDesignLikedSMS } from "../utils/sms.js";
+import Joi from "joi";
 
 // Validation schemas
 const createDesignSchema = Joi.object({

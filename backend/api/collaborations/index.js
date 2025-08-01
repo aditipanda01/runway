@@ -1,11 +1,11 @@
-const connectDB = require('../utils/db');
-const Collaboration = require('../../models/Collaboration');
-const Design = require('../../models/Design');
-const User = require('../../models/User');
-const Notification = require('../../models/Notification');
-const { authenticateToken, requireCompany } = require('../utils/auth');
-const { sendCollaborationRequestSMS } = require('../utils/sms');
-const Joi = require('joi');
+import connectDB from "../utils/db.js";
+import Collaboration from "../../models/Collaboration.js";
+import Design from "../../models/Design.js";
+import User from "../../models/User.js";
+import Notification from "../../models/Notification.js";
+import { authenticateToken, requireCompany } from "../utils/auth.js";
+import { sendCollaborationRequestSMS } from "../utils/sms.js";
+import Joi from "joi";
 
 // Validation schemas
 const createCollaborationSchema = Joi.object({

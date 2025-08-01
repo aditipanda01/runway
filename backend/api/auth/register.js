@@ -1,7 +1,7 @@
-const connectDB = require('../utils/db');
-const User = require('../../models/User');
-const { generateToken } = require('../utils/auth');
-const Joi = require('joi');
+import connectDB from "../utils/db.js";
+import User from "../../models/User.js";
+import { generateToken } from "../utils/auth.js";
+import Joi from "joi";
 
 // Validation schema
 const registerSchema = Joi.object({
