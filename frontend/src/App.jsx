@@ -1,19 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import EnhancedAuth from './components/auth/EnhancedAuth';
-import IndividualDashboard from './components/dashboard/IndividualDashboard';
-import CompanyDashboard from './components/dashboard/CompanyDashboard';
-import EnhancedDesignCard from './components/designs/EnhancedDesignCard';
 import pic1 from './assets/pic1.jpeg';
 import pic2 from './assets/pic2.png';
 import pic3 from './assets/pic3.jpeg';
 import blob from './assets/blob.svg';
-import "./node_modules/slick-carousel/slick/slick.css";
-import "./node_modules/slick-carousel/slick/slick-theme.css"; // if used
+import "../node_modules/slick-carousel/slick/slick.css";
+import "../node_modules/slick-carousel/slick/slick-theme.css"; // if used
 
 import Slider from "react-slick";
 
@@ -111,8 +104,6 @@ import LoginSignup from './LoginSignup';
 
 
 function Header() {
-  const { user, isAuthenticated, logout } = useAuth();
-
   return (
     <header style={{
       width: '100%',
@@ -144,43 +135,11 @@ function Header() {
         gap: 12,
         fontWeight: 600,
         fontSize: '1.1rem',
-        textTransform: 'uppercase',
-        alignItems: 'center'
+        textTransform: 'uppercase'
       }}>
         <Link to="/" style={{ color: '#181818', textDecoration: 'none' }}>Home</Link>
         <Link to="/blog" style={{ color: '#181818', textDecoration: 'none' }}>Blog</Link>
-        {isAuthenticated ? (
-          <>
-            <Link to="/dashboard" style={{ color: '#181818', textDecoration: 'none' }}>Dashboard</Link>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: '#181818',
-              color: '#ede7df',
-              padding: '0.5rem 1rem',
-              borderRadius: 20,
-              fontSize: '0.9rem'
-            }}>
-              <span>{user.userType === 'company' ? user.companyName : user.username || user.firstName}</span>
-              <button
-                onClick={logout}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#ede7df',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                  textDecoration: 'underline'
-                }}
-              >
-                Logout
-              </button>
-            </div>
-          </>
-        ) : (
-          <Link to="/auth" style={{ color: '#181818', textDecoration: 'none' }}>Login</Link>
-        )}
+        <Link to="/login-signup" style={{ color: '#181818', textDecoration: 'none' }}>Profile</Link>
       </nav>
     </header>
   );
@@ -330,11 +289,9 @@ function QuoteSection() {
           
         </div>
       </div>
-      <Link to="/dashboard">
-        <button style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 30, padding: '14px 36px', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1, cursor: 'pointer', boxShadow: '0 2px 8px #0004', textTransform: 'uppercase' }}>
-          Submit a Design
-        </button>
-      </Link>
+      <button style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 30, padding: '14px 36px', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1, cursor: 'pointer', boxShadow: '0 2px 8px #0004', textTransform: 'uppercase' }}>
+        Submit a Design
+      </button>
     </section>
   );
 }
@@ -992,48 +949,22 @@ function DressPage() {
 
 
 
-function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return <EnhancedAuth />;
-  }
-
-  return user.userType === 'company' ? <CompanyDashboard /> : <IndividualDashboard />;
-}
-
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<EnhancedAuth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/submit" element={<SubmitDesign />} />
-          <Route path="/design/:id" element={<DesignDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/login-signup" element={<LoginSignup />} />
-          <Route path="/dress" element={<DressPage />} />
-          <Route path="/jewellery" element={<JewelleryPage />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/shoes" element={<ShoesPage />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/submit" element={<SubmitDesign />} />
+        <Route path="/design/:id" element={<DesignDetail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/login-signup" element={<LoginSignup />} />
+        <Route path="/dress" element={<DressPage />} />
+        <Route path="/jewellery" element={<JewelleryPage />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/shoes" element={<ShoesPage />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Router>
   );
 }
 

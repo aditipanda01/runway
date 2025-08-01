@@ -3,7 +3,7 @@ import Design from "../../models/Design.js";
 import User from "../../models/User.js";
 import Notification from "../../models/Notification.js";
 import { authenticateToken, optionalAuth } from "../utils/auth.js";
-import { sendDesignLikedSMS } from "../utils/sms.js";
+//import { sendDesignLikedSMS } from "../utils/sms.js";
 import Joi from "joi";
 
 // Validation schemas

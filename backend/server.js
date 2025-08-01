@@ -5,7 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
 
-// Load env
+// Load environment variables
 dotenv.config();
 
 // Routes
@@ -16,23 +16,30 @@ import designHandler from "./api/designs/index.js";
 import collaborationRoutes from "./api/collaborations/index.js";
 import notificationsRoutes from "./api/notifications/index.js";
 
-// Init
+// Initialize express app
 const app = express();
 
-// Middleware
+// Global middlewares
 app.use(express.json());
-app.use(cors());
-app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-// Auth routes
+// Setup CORS
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true
+}));
+
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100
+}));
+
+// Routes
 app.use("/api/auth/login", loginRoute);
 app.use("/api/auth/register", registerRoute);
-
-// Other routes
 app.use("/api/users", userRoutes);
 
-// Wrap the design handler in a router to support Express routing
+// Wrap design handler with router
 const designRouter = express.Router();
 designRouter.all("/", designHandler);
 app.use("/api/designs", designRouter);
@@ -40,13 +47,17 @@ app.use("/api/designs", designRouter);
 app.use("/api/collaborations", collaborationRoutes);
 app.use("/api/notifications", notificationsRoutes);
 
-// DB Connect
+// Connect to MongoDB and start server
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
-  console.log("MongoDB connected");
-  app.listen(process.env.PORT || 5000, () =>
-    console.log(`Server running on port ${process.env.PORT || 5000}`)
-  );
-}).catch(err => console.error("DB connection error:", err));
+  console.log("✅ MongoDB connected");
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+  });
+}).catch(err => {
+  console.error("❌ DB connection error:", err);
+});
