@@ -32,6 +32,11 @@ const designSchema = new mongoose.Schema({
     isPrimary: {
       type: Boolean,
       default: false
+    },
+    resourceType: {
+      type: String,
+      enum: ['image', 'raw'],
+      default: 'image'
     }
   }],
   tags: [{
@@ -39,6 +44,10 @@ const designSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   }],
+  inspiration: {
+    type: String,
+    maxlength: 500
+  },
   isPublic: {
     type: Boolean,
     default: true

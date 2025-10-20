@@ -101,6 +101,9 @@ import ShoesPage from "./ShoesPage";
 import JewelleryPage from "./Jewellery";
 import Profile from './Profile';
 import LoginSignup from './LoginSignup';
+import { useState } from "react";
+import DesignSubmissionForm from './components/DesignSubmissionForm';
+
 
 
 function Header() {
@@ -250,8 +253,23 @@ function Hero() {
 }
 
 function QuoteSection() {
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
+
   return (
-    <section style={{ width: '100%', background: '#000', color: '#fff', textAlign: 'center', padding: '0 0 2rem 0', marginTop: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <section
+      style={{
+        width: '100%',
+        background: '#000',
+        color: '#fff',
+        textAlign: 'center',
+        padding: '0 0 2rem 0',
+        marginTop: 220,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
       <div className="quote-section">
         <div
           className="main-quote"
@@ -259,7 +277,7 @@ function QuoteSection() {
             fontFamily: "'Bebas Neue', Arial, sans-serif",
             fontWeight: 'bold',
             fontSize: '4.5rem',
-            whiteSpace: 'nowrap', // Ensures single line
+            whiteSpace: 'nowrap',
             marginBottom: '1rem',
             overflowX: 'auto',
             textOverflow: 'ellipsis',
@@ -269,6 +287,7 @@ function QuoteSection() {
         >
           Your style. Your stage. Their choice.
         </div>
+
         <div
           className="great-vibes-regular"
           style={{
@@ -281,17 +300,42 @@ function QuoteSection() {
             marginRight: 'auto',
           }}
         >
-          Every sketch begins with passion.<br/>
-          Here, raw ideas meet real voices — where<br/>
+          Every sketch begins with passion.<br />
+          Here, raw ideas meet real voices — where<br />
           designers rise, and talent gets the chance to shine.
         </div>
-        <div className="secondary-quote">
-          
-        </div>
       </div>
-      <button style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 30, padding: '14px 36px', fontWeight: 700, fontSize: '1.1rem', letterSpacing: 1, cursor: 'pointer', boxShadow: '0 2px 8px #0004', textTransform: 'uppercase' }}>
+
+      {/* Submit button */}
+      <button
+        onClick={() => setShowSubmitForm(true)}
+        style={{
+          background: '#444',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 30,
+          padding: '14px 36px',
+          fontWeight: 700,
+          fontSize: '1.1rem',
+          letterSpacing: 1,
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px #0004',
+          textTransform: 'uppercase'
+        }}
+      >
         Submit a Design
       </button>
+
+      {/* Modal */}
+      {showSubmitForm && (
+        <DesignSubmissionForm
+          onClose={() => setShowSubmitForm(false)}
+          onSuccess={() => {
+            // Optional: reload or refresh designs if needed
+            console.log("Design submitted successfully!");
+          }}
+        />
+      )}
     </section>
   );
 }

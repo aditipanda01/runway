@@ -3,10 +3,12 @@ import Design from "../../models/Design.js";
 import User from "../../models/User.js";
 import Notification from "../../models/Notification.js";
 import { authenticateToken, optionalAuth } from "../utils/auth.js";
-//import { sendDesignLikedSMS } from "../utils/sms.js";
+// import { sendDesignLikedSMS } from "../utils/sms.js";
 import Joi from "joi";
 
-// Validation schemas
+// ============================================
+// ✅ Updated Validation Schemas
+// ============================================
 const createDesignSchema = Joi.object({
   title: Joi.string().max(200).required(),
   description: Joi.string().max(1000).optional(),
@@ -14,11 +16,15 @@ const createDesignSchema = Joi.object({
   tags: Joi.array().items(Joi.string().max(50)).max(10).optional(),
   isPublic: Joi.boolean().default(true),
   isAvailableForCollab: Joi.boolean().default(false),
-  images: Joi.array().items(Joi.object({
-    url: Joi.string().uri().required(),
-    publicId: Joi.string().required(),
-    isPrimary: Joi.boolean().default(false)
-  })).min(1).required()
+  images: Joi.array().items(
+    Joi.object({
+      url: Joi.string().uri().required(),
+      publicId: Joi.string().required(),
+      isPrimary: Joi.boolean().default(false),
+      resourceType: Joi.string().valid('image', 'raw').optional() // ✅ Added field
+    })
+  ).min(1).required(),
+  inspiration: Joi.string().max(500).optional() // ✅ Added field
 });
 
 const querySchema = Joi.object({
@@ -32,6 +38,9 @@ const querySchema = Joi.object({
   tags: Joi.string().optional()
 });
 
+// ============================================
+// ✅ Main Handler
+// ============================================
 export default async function handler(req, res) {
   try {
     await connectDB();
@@ -61,6 +70,9 @@ export default async function handler(req, res) {
   }
 }
 
+// ============================================
+// ✅ GET Designs
+// ============================================
 async function getDesigns(req, res) {
   return new Promise((resolve) => {
     optionalAuth(req, res, async () => {
@@ -87,18 +99,13 @@ async function getDesigns(req, res) {
         // Build query
         let query = { isPublic: true };
 
-        if (category) {
-          query.category = category;
-        }
-
+        if (category) query.category = category;
         if (userId) {
           query.userId = userId;
-          // If requesting specific user's designs, show all their designs if they're the owner
           if (req.userId && req.userId.toString() === userId) {
-            delete query.isPublic;
+            delete query.isPublic; // Owner sees all
           }
         }
-
         if (search) {
           query.$or = [
             { title: { $regex: search, $options: 'i' } },
@@ -106,7 +113,6 @@ async function getDesigns(req, res) {
             { tags: { $in: [new RegExp(search, 'i')] } }
           ];
         }
-
         if (tags) {
           const tagArray = tags.split(',').map(tag => tag.trim());
           query.tags = { $in: tagArray };
@@ -115,14 +121,14 @@ async function getDesigns(req, res) {
         // Build sort object
         let sort = {};
         if (sortBy === 'likes') {
-          sort = { 'likesCount': sortOrder === 'asc' ? 1 : -1 };
+          sort = { likesCount: sortOrder === 'asc' ? 1 : -1 };
         } else if (sortBy === 'saves') {
-          sort = { 'savesCount': sortOrder === 'asc' ? 1 : -1 };
+          sort = { savesCount: sortOrder === 'asc' ? 1 : -1 };
         } else {
           sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
         }
 
-        // Execute query with aggregation for virtual fields
+        // Execute query
         const designs = await Design.aggregate([
           { $match: query },
           {
@@ -164,7 +170,7 @@ async function getDesigns(req, res) {
           }
         ]);
 
-        // Get total count for pagination
+        // Pagination
         const totalItems = await Design.countDocuments(query);
         const totalPages = Math.ceil(totalItems / limit);
 
@@ -198,11 +204,13 @@ async function getDesigns(req, res) {
   });
 }
 
+// ============================================
+// ✅ POST (Create Design)
+// ============================================
 async function createDesign(req, res) {
   return new Promise((resolve) => {
     authenticateToken(req, res, async () => {
       try {
-        // Validate request body
         const { error, value } = createDesignSchema.validate(req.body);
         if (error) {
           return res.status(400).json({
@@ -223,19 +231,15 @@ async function createDesign(req, res) {
           userId: req.userId
         };
 
-        // Ensure at least one image is marked as primary
+        // Ensure one image is marked primary
         if (designData.images && designData.images.length > 0) {
           const hasPrimary = designData.images.some(img => img.isPrimary);
-          if (!hasPrimary) {
-            designData.images[0].isPrimary = true;
-          }
+          if (!hasPrimary) designData.images[0].isPrimary = true;
         }
 
-        // Create design
         const design = new Design(designData);
         await design.save();
 
-        // Populate user data
         await design.populate('userId', 'firstName lastName username companyName userType profilePicture companyLogo');
 
         res.status(201).json({
