@@ -22,8 +22,10 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const loadUserProfile = async () => {
+    if (!token) return;
+    
     try {
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch('http://localhost:5000/api/users/profile', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -34,7 +36,6 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         setUser(data.data);
       } else {
-        // Token invalid, clear it
         console.log('Invalid token, clearing...');
         localStorage.removeItem('token');
         setToken(null);
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔐 Attempting login...');
       
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -97,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       console.log('📝 Attempting registration...');
       console.log('📤 User data:', userData);
       
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -117,11 +118,9 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.error('❌ Registration failed:', data.error);
         
-        // Extract detailed error message
         let errorMessage = 'Registration failed. Please try again.';
         
         if (data.error?.details && Array.isArray(data.error.details)) {
-          // Joi validation errors
           errorMessage = data.error.details.map(d => d.message).join(', ');
         } else if (data.error?.message) {
           errorMessage = data.error.message;
@@ -152,7 +151,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch('http://localhost:5000/api/users/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

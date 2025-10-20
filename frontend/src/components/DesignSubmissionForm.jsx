@@ -17,7 +17,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     
-    // Validate file types
     const validFiles = files.filter(file => {
       const isImage = file.type.startsWith('image/');
       const isPdf = file.type === 'application/pdf';
@@ -29,7 +28,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
       return;
     }
 
-    // Validate file sizes (max 5MB each)
     const oversizedFiles = validFiles.filter(file => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       setError('Each file must be under 5MB');
@@ -39,7 +37,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
     setSelectedFiles(validFiles);
     setError('');
 
-    // Create preview URLs for images only
     const previews = validFiles.map(file => {
       if (file.type.startsWith('image/')) {
         return URL.createObjectURL(file);
@@ -57,7 +54,7 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
   const uploadToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'RunwayDesigns'); // Create this preset in Cloudinary
+    formData.append('upload_preset', 'RunwayDesigns');
     formData.append('folder', 'Runway');
 
     try {
@@ -88,7 +85,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.title.trim()) {
       setError('Title is required');
       return;
@@ -114,7 +110,12 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
 
       // Create design via API
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/designs', {
+      
+      if (!token) {
+        throw new Error('You must be logged in to submit designs');
+      }
+      
+      const response = await fetch('http://localhost:5000/api/designs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +144,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
         throw new Error(data.error?.message || 'Failed to submit design');
       }
 
-      // Clean up preview URLs
       previewUrls.forEach(url => {
         if (url) URL.revokeObjectURL(url);
       });
@@ -183,7 +183,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -313,7 +312,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
               </label>
             </div>
 
-            {/* File Previews */}
             {selectedFiles.length > 0 && (
               <div style={{ marginTop: '1rem' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem', color: '#181818' }}>
@@ -338,7 +336,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
               </div>
             )}
 
-            {/* Image Previews */}
             {previewUrls.some(url => url !== null) && (
               <div style={{
                 display: 'grid',
@@ -419,7 +416,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
             />
           </div>
 
-          {/* Error Message */}
           {error && (
             <div style={{
               color: '#dc3545',
@@ -434,7 +430,6 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Submit Buttons */}
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
               type="button"
