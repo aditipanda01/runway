@@ -103,20 +103,24 @@ import Profile from './Profile';
 import LoginSignup from './LoginSignup';
 import { useState } from "react";
 import DesignSubmissionForm from './components/DesignSubmissionForm';
+import { useAuth } from './contexts/AuthContext';
+
 
 
 
 function Header() {
+  const { isAuthenticated, user } = useAuth();
+
   return (
     <header style={{
       width: '100%',
       background: '#ede7df',
       color: '#181818',
       display: 'flex',
-      marginLeft:-100,
-      gap:100,
+      marginLeft: -100,
+      gap: 100,
       alignItems: 'center',
-      justifyContent: 'space-between', // logo left, nav right
+      justifyContent: 'space-between',
       padding: '2.5rem 2vw 1.5rem 2vw',
       fontFamily: 'Montserrat, Arial, sans-serif',
       letterSpacing: 2
@@ -127,12 +131,13 @@ function Header() {
           fontWeight: 700,
           fontSize: '2.2rem',
           letterSpacing: 2,
-          marginLeft:200,
-          marginRight: 0 // Reduce this value to move Home closer
+          marginLeft: 200,
+          marginRight: 0
         }}
       >
         THE RUNWAY
       </div>
+
       <nav style={{
         display: 'flex',
         gap: 12,
@@ -142,12 +147,19 @@ function Header() {
       }}>
         <Link to="/" style={{ color: '#181818', textDecoration: 'none' }}>Home</Link>
         <Link to="/blog" style={{ color: '#181818', textDecoration: 'none' }}>Blog</Link>
-        <Link to="/login-signup" style={{ color: '#181818', textDecoration: 'none' }}>Profile</Link>
+        {isAuthenticated ? (
+          <Link to="/profile" style={{ color: '#181818', textDecoration: 'none' }}>
+            {user?.name || 'Profile'}
+          </Link>
+        ) : (
+          <Link to="/login-signup" style={{ color: '#181818', textDecoration: 'none' }}>
+            Login/Signup
+          </Link>
+        )}
       </nav>
     </header>
   );
 }
-
 function Hero() {
   return (
     <section

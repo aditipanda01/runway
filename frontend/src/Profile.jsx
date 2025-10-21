@@ -7,7 +7,7 @@ const Profile = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    designsSubmitted: 0,
+    designsCount: 0,
     totalLikes: 0,
     totalSaved: 0,
     totalShared: 0,
@@ -15,6 +15,7 @@ const Profile = () => {
   });
   const [myDesigns, setMyDesigns] = useState([]);
   const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -23,12 +24,12 @@ const Profile = () => {
       loadStats();
       loadMyDesigns();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshTrigger]); // Added refreshTrigger dependency
 
   const loadStats = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("/api/users/profile", {
+      const response = await fetch("http://localhost:5000/api/users/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -44,7 +45,7 @@ const Profile = () => {
     if (!user) return;
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`/api/designs?userId=${user._id}`, {
+      const response = await fetch(`http://localhost:5000/api/designs?userId=${user._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -54,6 +55,29 @@ const Profile = () => {
     } catch (error) {
       console.error("Failed to load designs:", error);
     }
+  };
+
+  // Handle successful design submission with real-time refresh
+  const handleDesignSuccess = (newDesign) => {
+    console.log('✅ New design submitted:', newDesign);
+    
+    // Trigger immediate refresh
+    setRefreshTrigger(prev => prev + 1);
+    
+    // Also manually update the designs list for instant feedback
+    setMyDesigns(prev => [newDesign, ...prev]);
+    
+    // Update stats count
+    setStats(prev => ({
+      ...prev,
+      designsCount: prev.designsCount + 1
+    }));
+    
+    // Close the form
+    setShowSubmitForm(false);
+    
+    // Show success message
+    alert('🎉 Design submitted successfully! Your design is now visible in your profile and category page.');
   };
 
   if (!user) return null;
@@ -153,7 +177,7 @@ const Profile = () => {
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.designsSubmitted}</div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.designsCount}</div>
             <div>Designs Submitted</div>
           </div>
           <div
@@ -226,7 +250,7 @@ const Profile = () => {
 
       {/* My Submitted Designs */}
       <div style={{ width: "100%", maxWidth: 1200 }}>
-        <h3 style={{ marginBottom: 16 }}>My Submitted Designs</h3>
+        <h3 style={{ marginBottom: 16 }}>My Submitted Designs ({myDesigns.length})</h3>
         <div
           style={{
             display: "grid",
@@ -266,6 +290,15 @@ const Profile = () => {
                 >
                   {design.category}
                 </div>
+                {design.tags && design.tags.length > 0 && (
+                  <div style={{ 
+                    fontSize: "0.7rem", 
+                    color: "#aaa", 
+                    marginTop: "0.5rem" 
+                  }}>
+                    {design.tags.slice(0, 2).map(tag => `#${tag}`).join(' ')}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -276,7 +309,7 @@ const Profile = () => {
       {showSubmitForm && (
         <DesignSubmissionForm
           onClose={() => setShowSubmitForm(false)}
-          onSuccess={loadMyDesigns}
+          onSuccess={handleDesignSuccess}
         />
       )}
     </div>

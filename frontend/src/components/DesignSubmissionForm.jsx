@@ -10,9 +10,11 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
     description: ''
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [designerPhoto, setDesignerPhoto] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [designerPhotoPreview, setDesignerPhotoPreview] = useState(null);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -46,6 +48,26 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
     setPreviewUrls(previews);
   };
 
+  const handleDesignerPhotoChange = (e) => {
+    const file = e.target.files[0];
+    
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Designer photo must be an image');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Designer photo must be under 5MB');
+      return;
+    }
+    
+    setDesignerPhoto(file);
+    setDesignerPhotoPreview(URL.createObjectURL(file));
+    setError('');
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -59,7 +81,7 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
 
     try {
       const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+        `https://api.cloudinary.com/v1_1/dp6rkyhgn/auto/upload`,
         {
           method: 'POST',
           body: formData
@@ -83,81 +105,67 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      setError('Title is required');
-      return;
-    }
+  e.preventDefault();
 
-    if (selectedFiles.length === 0) {
-      setError('Please select at least one file');
-      return;
-    }
+  if (!formData.title.trim()) return setError("Title is required");
+  if (selectedFiles.length === 0) return setError("Please select at least one design file");
+  if (!designerPhoto) return setError("Please upload your designer photo");
+  if (!formData.inspiration.trim()) return setError("Inspiration/Tags are required");
 
-    if (!formData.inspiration.trim()) {
-      setError('Inspiration is required');
-      return;
-    }
+  setUploading(true);
+  setError("");
 
-    setUploading(true);
-    setError('');
+  try {
+    const designerPhotoData = await uploadToCloudinary(designerPhoto);
 
-    try {
-      // Upload all files to Cloudinary
-      const uploadPromises = selectedFiles.map(file => uploadToCloudinary(file));
-      const uploadedFiles = await Promise.all(uploadPromises);
+    const uploadPromises = selectedFiles.map(file => uploadToCloudinary(file));
+    const uploadedFiles = await Promise.all(uploadPromises);
 
-      // Create design via API
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('You must be logged in to submit designs');
-      }
-      
-      const response = await fetch('http://localhost:5000/api/designs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("You must be logged in to submit designs");
+
+    const response = await fetch("http://localhost:5000/api/designs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        tags: formData.inspiration.split(",").map(tag => tag.trim()).filter(Boolean),
+        isPublic: true,
+        isAvailableForCollab: false,
+        images: uploadedFiles.map((file, index) => ({
+          url: file.url,
+          publicId: file.publicId,
+          isPrimary: index === 0,
+          resourceType: file.resourceType,
+        })),
+        inspiration: formData.inspiration.trim(),
+        designerPhoto: {
+          url: designerPhotoData.url,
+          publicId: designerPhotoData.publicId,
         },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          category: formData.category,
-          tags: formData.inspiration.split(',').map(tag => tag.trim()).filter(Boolean),
-          isPublic: true,
-          isAvailableForCollab: false,
-          images: uploadedFiles.map((file, index) => ({
-            url: file.url,
-            publicId: file.publicId,
-            isPrimary: index === 0,
-            resourceType: file.resourceType
-          })),
-          inspiration: formData.inspiration.trim()
-        })
-      });
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error?.message || 'Failed to submit design');
-      }
+    if (!response.ok) throw new Error(data.error?.message || "Failed to submit design");
 
-      previewUrls.forEach(url => {
-        if (url) URL.revokeObjectURL(url);
-      });
+    alert("Design submitted successfully! 🎉");
+    if (onSuccess) onSuccess(data.data);
+    if (onClose) onClose();
+  } catch (err) {
+    console.error("Submission error:", err);
+    setError(err.message || "Failed to submit design. Please try again.");
+  } finally {
+    setUploading(false);
+  }
+};
 
-      alert('Design submitted successfully!');
-      onSuccess?.();
-      onClose?.();
-    } catch (err) {
-      console.error('Submission error:', err);
-      setError(err.message || 'Failed to submit design. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <div style={{
@@ -213,6 +221,62 @@ const DesignSubmissionForm = ({ onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Designer Photo Upload */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontWeight: 600,
+              color: '#181818'
+            }}>
+              Your Designer Photo *
+            </label>
+            <div style={{
+              border: '2px dashed #ddd',
+              borderRadius: 8,
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: '#f9f9f9',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleDesignerPhotoChange}
+                style={{ display: 'none' }}
+                id="designer-photo-upload"
+              />
+              <label htmlFor="designer-photo-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                {designerPhotoPreview ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      border: '2px solid #181818'
+                    }}>
+                      <img src={designerPhotoPreview} alt="Designer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#28a745', fontWeight: 600 }}>
+                      ✓ Photo uploaded
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👤</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: '#181818' }}>
+                      Upload Your Photo
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                      This will appear with your design
+                    </div>
+                  </>
+                )}
+              </label>
+            </div>
+          </div>
+
           {/* Title */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{
