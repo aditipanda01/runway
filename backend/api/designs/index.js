@@ -10,7 +10,7 @@ import Joi from "joi";
 // ============================================
 const createDesignSchema = Joi.object({
   title: Joi.string().max(200).required(),
-  description: Joi.string().max(1000).optional(),
+  description: Joi.string().max(1000).allow('').optional(),
   category: Joi.string().valid("dress", "jewellery", "shoes").required(),
   tags: Joi.array().items(Joi.string().max(50)).max(10).optional(),
   isPublic: Joi.boolean().default(true),
@@ -26,24 +26,11 @@ const createDesignSchema = Joi.object({
     )
     .min(1)
     .required(),
-  inspiration: Joi.string().max(500).optional(),
+  inspiration: Joi.string().max(500).allow('').optional(),
   designerPhoto: Joi.object({
     url: Joi.string().uri().required(),
     publicId: Joi.string().required(),
-  }).required(), // Added this field
-});
-
-const querySchema = Joi.object({
-  page: Joi.number().integer().min(1).default(1),
-  limit: Joi.number().integer().min(1).max(50).default(20),
-  category: Joi.string().valid("dress", "jewellery", "shoes").optional(),
-  search: Joi.string().max(100).optional(),
-  userId: Joi.string().optional(),
-  sortBy: Joi.string()
-    .valid("createdAt", "likes", "views", "saves")
-    .default("createdAt"),
-  sortOrder: Joi.string().valid("asc", "desc").default("desc"),
-  tags: Joi.string().optional(),
+  }).required(),
 });
 
 // ============================================

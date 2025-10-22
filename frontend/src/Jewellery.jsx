@@ -1,63 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import jewebg from './assets/jewebg.jpeg';
-import a1 from './assets/a1.jpeg';
-import a2 from './assets/a2.jpeg';
-import a3 from './assets/a3.jpeg';
-import a4 from './assets/a4.jpeg';
-import a5 from './assets/a5.jpeg';
-import a6 from './assets/a6.jpeg';
-import a7 from './assets/a7.jpeg';
-import a8 from './assets/a8.jpeg';
-import a9 from './assets/a9.jpeg';
-
-// Import j1.jpeg to j37.jpeg from the jewellery folder
-import j1 from './assets/jewellery/j1.jpeg';
-import j2 from './assets/jewellery/j2.jpeg';
-import j3 from './assets/jewellery/j3.jpeg';
-import j4 from './assets/jewellery/j4.jpeg';
-import j5 from './assets/jewellery/j5.jpeg';
-import j6 from './assets/jewellery/j6.jpeg';
-import j7 from './assets/jewellery/j7.jpeg';
-import j8 from './assets/jewellery/j8.jpeg';
-import j9 from './assets/jewellery/j9.jpeg';
-import j10 from './assets/jewellery/j10.jpeg';
-import j11 from './assets/jewellery/j11.jpeg';
-import j12 from './assets/jewellery/j12.jpeg';
-import j13 from './assets/jewellery/j13.jpeg';
-import j14 from './assets/jewellery/j14.jpeg';
-import j15 from './assets/jewellery/j15.jpeg';
-import j16 from './assets/jewellery/j16.jpeg';
-import j17 from './assets/jewellery/j17.jpeg';
-import j18 from './assets/jewellery/j18.jpeg';
-import j19 from './assets/jewellery/j19.jpeg';
-import j20 from './assets/jewellery/j20.jpeg';
-import j21 from './assets/jewellery/j21.jpeg';
-import j22 from './assets/jewellery/j22.jpeg';
-import j23 from './assets/jewellery/j23.jpeg';
-import j24 from './assets/jewellery/j24.jpeg';
-import j25 from './assets/jewellery/j25.jpeg';
-import j26 from './assets/jewellery/j26.jpeg';
-import j27 from './assets/jewellery/j27.jpeg';
-import j28 from './assets/jewellery/j28.jpeg';
-import j29 from './assets/jewellery/j29.jpeg';
-import j30 from './assets/jewellery/j30.jpeg';
-import j31 from './assets/jewellery/j31.jpeg';
-import j32 from './assets/jewellery/j32.jpeg';
-import j33 from './assets/jewellery/j33.jpeg';
-import j34 from './assets/jewellery/j34.jpeg';
-import j35 from './assets/jewellery/j35.jpeg';
-import j36 from './assets/jewellery/j36.jpeg';
-import j37 from './assets/jewellery/j37.jpeg';
 import jbg from './assets/jbg.jpg';
 import jbg1 from './assets/jbg1.jpg';
 import jbg2 from './assets/jbg2.jpg';
-
 import jbg3 from './assets/jbg3.jpeg';
 
-const jewelleryImages = [
-  j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15, j16, j17, j18, j19, j20, j21, j22, j23, j24, j25, j26, j27, j28, j29, j30, j31, j32, j33, j34, j35, j36, j37
-];
-const avatarImages = [a1, a2, a3, a4, a5, a6, a7, a8, a9];
 const sliderImages = [jbg, jbg1, jbg2, jbg3];
 
 function JewelleryAllureBanner() {
@@ -79,7 +27,6 @@ function JewelleryAllureBanner() {
         marginBottom: 0,
       }}
     >
-      {/* Top line */}
       <div
         style={{
           position: 'absolute',
@@ -90,7 +37,6 @@ function JewelleryAllureBanner() {
           background: 'rgba(255,255,255,0.4)',
         }}
       />
-      {/* Bottom line */}
       <div
         style={{
           position: 'absolute',
@@ -101,7 +47,6 @@ function JewelleryAllureBanner() {
           background: 'rgba(255,255,255,0.4)',
         }}
       />
-      {/* Main text */}
       <div style={{ fontSize: 44, fontWeight: 600, letterSpacing: 12, zIndex: 1, marginBottom: 8 }}>
         Emotional & Personal
       </div>
@@ -122,7 +67,10 @@ function JewelleryAllureBanner() {
   );
 }
 
-function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspirationText }) {
+function DesignerInspirationCard({ design }) {
+  const primaryImage = design.images?.find(img => img.isPrimary) || design.images?.[0];
+  const designerPhoto = design.designerPhoto;
+
   return (
     <div style={{
       background: '#8c8c8c',
@@ -137,7 +85,6 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
       position: 'relative',
       margin: 24
     }}>
-      {/* Main image (left) */}
       <div style={{
         width: 200,
         height: 400,
@@ -149,8 +96,7 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
         marginRight: 32,
         flexShrink: 0
       }}>
-        <img src={mainImage} alt="Jewellery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        {/* Notch */}
+        {primaryImage && <img src={primaryImage.url} alt="Jewellery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         <div style={{
           position: 'absolute',
           top: 12,
@@ -162,7 +108,7 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
           borderRadius: 5
         }} />
       </div>
-      {/* Right side: Designer name and box */}
+
       <div style={{ flex: 1 }}>
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",
@@ -171,9 +117,9 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
           color: '#222',
           marginBottom: 18
         }}>
-          {designerName}
+          {design.user?.username || `${design.user?.firstName} ${design.user?.lastName}`}
         </div>
-        {/* Box with image and inspiration */}
+
         <div style={{
           background: 'rgba(237, 231, 223, 0.5)',
           borderRadius: 5,
@@ -185,7 +131,6 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
           display: 'flex',
           alignItems: 'center',
         }}>
-          {/* Avatar in a circle */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -198,21 +143,23 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
             borderRadius: '50%',
             background: 'rgba(237, 231, 223, 0.5)',
           }}>
-            <img
-              src={avatarImage}
-              alt="Avatar"
-              style={{
-                width: 110,
-                height: 110,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid #fff',
-                boxShadow: '0 1px 4px #0002',
-                background: '#fff',
-              }}
-            />
+            {designerPhoto && (
+              <img
+                src={designerPhoto.url}
+                alt="Designer"
+                style={{
+                  width: 110,
+                  height: 110,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid #fff',
+                  boxShadow: '0 1px 4px #0002',
+                  background: '#fff',
+                }}
+              />
+            )}
           </div>
-          {/* Emojis and inspiration text vertically aligned */}
+
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -227,7 +174,7 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
               <span style={{ color: '#222', fontSize: 32 }}>🔗</span>
             </div>
             <div style={{ fontSize: 15, color: '#222', fontWeight: 400, textAlign: 'left', width: '100%' }}>
-              {inspirationText}
+              {design.inspiration || design.description || design.tags?.join(', ') || 'Exquisite jewellery inspiration'}
             </div>
           </div>
         </div>
@@ -238,16 +185,39 @@ function DesignerInspirationCard({ designerName, mainImage, avatarImage, inspira
 
 const JewelleryPage = () => {
   const [current, setCurrent] = useState(0);
-  const prevSlide = () => setCurrent((current - 1 + sliderImages.length) % sliderImages.length);
-  const nextSlide = () => setCurrent((current + 1) % sliderImages.length);
+  const [designs, setDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Auto-advance slider every 3 seconds
+  useEffect(() => {
+    fetchJewelleryDesigns();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % sliderImages.length);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchJewelleryDesigns = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/designs?category=jewellery&limit=100&sortBy=createdAt&sortOrder=desc');
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Fetched jewellery designs:', data.data.designs.length);
+        setDesigns(data.data.designs);
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch jewellery designs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const prevSlide = () => setCurrent((current - 1 + sliderImages.length) % sliderImages.length);
+  const nextSlide = () => setCurrent((current + 1) % sliderImages.length);
 
   return (
     <div style={{
@@ -260,9 +230,7 @@ const JewelleryPage = () => {
       alignItems: 'center',
       overflow: 'hidden',
     }}>
-      {/* Banner */}
       <div style={{ background: '#d3d3d3', width: '100vw', height: '60vh', minHeight: '60vh', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 80 }}>
-        {/* Background image with opacity for this section only */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -281,32 +249,36 @@ const JewelleryPage = () => {
             <JewelleryAllureBanner />
           </div>
         </div>
-        {/* Slider with arrows */}
         <div style={{ position: 'relative', width: '100%', height: '100%', background: '#d3d3d3', borderRadius: 12, boxShadow: '0 2px 12px #0001', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           <img src={sliderImages[current]} alt="Jewellery Slide" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8, transition: 'all 0.4s cubic-bezier(.4,2,.6,1)' }} />
-          {/* Left arrow */}
           <button onClick={prevSlide} style={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', background: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, boxShadow: '0 2px 8px #0002', cursor: 'pointer', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&lt;</button>
-          {/* Right arrow */}
           <button onClick={nextSlide} style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', background: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, boxShadow: '0 2px 8px #0002', cursor: 'pointer', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&gt;</button>
         </div>
       </div>
-      {/* Feature Circle */}
+
       <div style={{ position: 'absolute', left: '50%', top: '70vh', transform: 'translate(-50%, -50%)', width: 320, height: 320, borderRadius: '50%', background: '#fff', boxShadow: '0 8px 32px #0004', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '8px solid #d3d3d3', zIndex: 2 }}>
         <img src={jewebg} alt="Jewellery Feature" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
-      {/* Designer Inspiration Grid */}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 40, justifyItems: 'center', width: '100%', marginTop: 120, marginBottom: 80 }}>
-        {jewelleryImages.map((img, idx) => (
-          <DesignerInspirationCard
-            key={idx}
-            designerName={`Designer ${idx + 1}`}
-            mainImage={img}
-            avatarImage={avatarImages[idx % avatarImages.length]}
-            inspirationText={"Inspiration for this jewellery piece goes here."}
-          />
-        ))}
+        {loading ? (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400, color: '#fff', fontSize: '1.2rem' }}>
+            Loading jewellery designs...
+          </div>
+        ) : designs.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400, color: '#fff', fontSize: '1.2rem', flexDirection: 'column', gap: '1rem' }}>
+            <div>No jewellery designs found yet.</div>
+            <Link to="/profile" style={{ color: '#007bff', textDecoration: 'none' }}>
+              Submit the first jewellery design!
+            </Link>
+          </div>
+        ) : (
+          designs.map((design) => (
+            <DesignerInspirationCard key={design._id} design={design} />
+          ))
+        )}
       </div>
-      {/* Footer */}
+
       <footer style={{ width: '100%', background: '#222', color: '#fff', textAlign: 'center', padding: '32px 0 20px 0', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: 16, letterSpacing: 1, marginTop: 40 }}>
         &copy; {new Date().getFullYear()} Designer Gallery. All rights reserved.
       </footer>
@@ -314,4 +286,4 @@ const JewelleryPage = () => {
   );
 };
 
-export default JewelleryPage; 
+export default JewelleryPage;

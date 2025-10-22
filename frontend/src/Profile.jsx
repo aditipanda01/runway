@@ -15,16 +15,29 @@ const Profile = () => {
   });
   const [myDesigns, setMyDesigns] = useState([]);
   const [showSubmitForm, setShowSubmitForm] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [loading, setLoading] = useState(false);
 
+  // Load data when component mounts or user changes
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login-signup");
-    } else {
-      loadStats();
-      loadMyDesigns();
+    } else if (user) {
+      loadProfileData();
     }
-  }, [isAuthenticated, refreshTrigger]); // Added refreshTrigger dependency
+  }, [isAuthenticated, user?._id]); // Re-run when user ID changes
+
+  const loadProfileData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      await Promise.all([loadStats(), loadMyDesigns()]);
+    } catch (error) {
+      console.error('Failed to load profile data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadStats = async () => {
     const token = localStorage.getItem("token");
@@ -42,36 +55,46 @@ const Profile = () => {
   };
 
   const loadMyDesigns = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('❌ No user found');
+      return;
+    }
     const token = localStorage.getItem("token");
+    console.log('🔍 Fetching designs for user:', user._id);
     try {
-      const response = await fetch(`http://localhost:5000/api/designs?userId=${user._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const url = `http://localhost:5000/api/designs?userId=${user._id}&limit=100`;
+      console.log('📡 API URL:', url);
+      
+      const response = await fetch(url, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
+      
+      console.log('📨 Response status:', response.status);
       const data = await response.json();
-      if (data.success) {
+      console.log('📦 Response data:', data);
+      
+      if (data.success && data.data && data.data.designs) {
+        console.log('✅ Loaded user designs:', data.data.designs.length);
+        console.log('📋 Designs:', data.data.designs);
         setMyDesigns(data.data.designs);
+      } else {
+        console.log('⚠️ No designs in response or unsuccessful');
+        setMyDesigns([]);
       }
     } catch (error) {
-      console.error("Failed to load designs:", error);
+      console.error("❌ Failed to load designs:", error);
+      setMyDesigns([]);
     }
   };
 
-  // Handle successful design submission with real-time refresh
-  const handleDesignSuccess = (newDesign) => {
+  const handleDesignSuccess = async (newDesign) => {
     console.log('✅ New design submitted:', newDesign);
     
-    // Trigger immediate refresh
-    setRefreshTrigger(prev => prev + 1);
-    
-    // Also manually update the designs list for instant feedback
-    setMyDesigns(prev => [newDesign, ...prev]);
-    
-    // Update stats count
-    setStats(prev => ({
-      ...prev,
-      designsCount: prev.designsCount + 1
-    }));
+    // Reload all data
+    await loadProfileData();
     
     // Close the form
     setShowSubmitForm(false);
@@ -81,6 +104,21 @@ const Profile = () => {
   };
 
   if (!user) return null;
+
+  if (loading && myDesigns.length === 0) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "#181818",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <div style={{ fontSize: '1.2rem' }}>Loading profile...</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -251,58 +289,76 @@ const Profile = () => {
       {/* My Submitted Designs */}
       <div style={{ width: "100%", maxWidth: 1200 }}>
         <h3 style={{ marginBottom: 16 }}>My Submitted Designs ({myDesigns.length})</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "1rem",
-          }}
-        >
-          {myDesigns.map((design) => (
-            <div
-              key={design._id}
-              style={{
-                background: "#333",
-                borderRadius: 8,
-                overflow: "hidden",
-              }}
-            >
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#ccc' }}>
+            Loading designs...
+          </div>
+        ) : myDesigns.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '3rem', 
+            background: '#232323',
+            borderRadius: 12,
+            color: '#ccc'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎨</div>
+            <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>No designs yet</div>
+            <div style={{ fontSize: '0.9rem' }}>Click "Submit New Design" to upload your first design!</div>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {myDesigns.map((design) => (
               <div
+                key={design._id}
                 style={{
-                  height: 200,
-                  background: design.images[0]
-                    ? `url(${design.images[0].url})`
-                    : "#444",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
+                  background: "#333",
+                  borderRadius: 8,
+                  overflow: "hidden",
                 }}
-              />
-              <div style={{ padding: "1rem" }}>
-                <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
-                  {design.title}
-                </div>
+              >
                 <div
                   style={{
-                    fontSize: "0.8rem",
-                    color: "#ccc",
-                    textTransform: "capitalize",
+                    height: 200,
+                    background: design.images?.[0]?.url
+                      ? `url(${design.images[0].url})`
+                      : "#444",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                   }}
-                >
-                  {design.category}
-                </div>
-                {design.tags && design.tags.length > 0 && (
-                  <div style={{ 
-                    fontSize: "0.7rem", 
-                    color: "#aaa", 
-                    marginTop: "0.5rem" 
-                  }}>
-                    {design.tags.slice(0, 2).map(tag => `#${tag}`).join(' ')}
+                />
+                <div style={{ padding: "1rem" }}>
+                  <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
+                    {design.title}
                   </div>
-                )}
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "#ccc",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {design.category}
+                  </div>
+                  {design.tags && design.tags.length > 0 && (
+                    <div style={{ 
+                      fontSize: "0.7rem", 
+                      color: "#aaa", 
+                      marginTop: "0.5rem" 
+                    }}>
+                      {design.tags.slice(0, 2).map(tag => `#${tag}`).join(' ')}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Design Submission Modal */}
