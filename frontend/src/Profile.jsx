@@ -24,7 +24,7 @@ const Profile = () => {
     } else if (user) {
       loadProfileData();
     }
-  }, [isAuthenticated, user?._id]); // Re-run when user ID changes
+  }, [isAuthenticated, user?._id]);
 
   const loadProfileData = async () => {
     if (!user) return;
@@ -47,6 +47,7 @@ const Profile = () => {
       });
       const data = await response.json();
       if (data.success) {
+        console.log('📊 Stats loaded:', data.data.stats);
         setStats(data.data.stats || stats);
       }
     } catch (error) {
@@ -62,7 +63,7 @@ const Profile = () => {
     const token = localStorage.getItem("token");
     console.log('🔍 Fetching designs for user:', user._id);
     try {
-      const url = `http://localhost:5000/api/designs?userId=${user._id}&limit=100`;
+      const url = `http://localhost:5000/api/designs?userId=${user._id}&limit=100&sortBy=createdAt&sortOrder=desc`;
       console.log('📡 API URL:', url);
       
       const response = await fetch(url, {
@@ -76,14 +77,15 @@ const Profile = () => {
       const data = await response.json();
       console.log('📦 Response data:', data);
       
-      if (data.success && data.data && data.data.designs) {
-        console.log('✅ Loaded user designs:', data.data.designs.length);
-        console.log('📋 Designs:', data.data.designs);
-        setMyDesigns(data.data.designs);
-      } else {
-        console.log('⚠️ No designs in response or unsuccessful');
-        setMyDesigns([]);
-      }
+     if (data.success) {
+  const designs = Array.isArray(data.data)
+    ? data.data
+    : data.data?.designs || [];
+  setMyDesigns(designs);
+} else {
+  setMyDesigns([]);
+}
+
     } catch (error) {
       console.error("❌ Failed to load designs:", error);
       setMyDesigns([]);
@@ -281,6 +283,7 @@ const Profile = () => {
           cursor: "pointer",
           fontWeight: 600,
           marginBottom: "2rem",
+          fontSize: '1.1rem'
         }}
       >
         + Submit New Design
@@ -288,7 +291,9 @@ const Profile = () => {
 
       {/* My Submitted Designs */}
       <div style={{ width: "100%", maxWidth: 1200 }}>
-        <h3 style={{ marginBottom: 16 }}>My Submitted Designs ({myDesigns.length})</h3>
+        <h3 style={{ marginBottom: 16, fontSize: '1.5rem' }}>
+          My Submitted Designs ({myDesigns.length})
+        </h3>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: '#ccc' }}>
             Loading designs...
@@ -309,54 +314,108 @@ const Profile = () => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: "1rem",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "1.5rem",
             }}
           >
-            {myDesigns.map((design) => (
-              <div
-                key={design._id}
-                style={{
-                  background: "#333",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                }}
-              >
+            {myDesigns.map((design) => {
+              const primaryImage = design.images?.find(img => img.isPrimary) || design.images?.[0];
+              
+              return (
                 <div
+                  key={design._id}
                   style={{
-                    height: 200,
-                    background: design.images?.[0]?.url
-                      ? `url(${design.images[0].url})`
-                      : "#444",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    background: "#333",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    transition: 'transform 0.2s',
+                    cursor: 'pointer'
                   }}
-                />
-                <div style={{ padding: "1rem" }}>
-                  <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
-                    {design.title}
-                  </div>
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
                   <div
                     style={{
-                      fontSize: "0.8rem",
-                      color: "#ccc",
-                      textTransform: "capitalize",
+                      height: 250,
+                      background: primaryImage?.url
+                        ? `url(${primaryImage.url})`
+                        : "#444",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      position: 'relative'
                     }}
                   >
-                    {design.category}
-                  </div>
-                  {design.tags && design.tags.length > 0 && (
-                    <div style={{ 
-                      fontSize: "0.7rem", 
-                      color: "#aaa", 
-                      marginTop: "0.5rem" 
+                    <div style={{
+                      position: 'absolute',
+                      top: 12,
+                      left: 12,
+                      background: 'rgba(0,0,0,0.7)',
+                      color: '#fff',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: 20,
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      textTransform: 'capitalize'
                     }}>
-                      {design.tags.slice(0, 2).map(tag => `#${tag}`).join(' ')}
+                      {design.category}
                     </div>
-                  )}
+                  </div>
+                  <div style={{ padding: "1.25rem" }}>
+                    <div style={{ fontWeight: 600, marginBottom: "0.5rem", fontSize: '1.1rem' }}>
+                      {design.title}
+                    </div>
+                    {design.description && (
+                      <div style={{ 
+                        fontSize: '0.9rem', 
+                        color: '#ccc', 
+                        marginBottom: '0.75rem',
+                        lineHeight: 1.4,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {design.description}
+                      </div>
+                    )}
+                    {design.tags && design.tags.length > 0 && (
+                      <div style={{ 
+                        fontSize: "0.8rem", 
+                        color: "#aaa", 
+                        marginBottom: "0.75rem",
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem'
+                      }}>
+                        {design.tags.slice(0, 3).map((tag, idx) => (
+                          <span key={idx} style={{
+                            background: '#444',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: 12
+                          }}>
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "#ccc",
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingTop: '0.75rem',
+                        borderTop: '1px solid #444'
+                      }}
+                    >
+                      <span>💖 {design.likesCount || 0}</span>
+                      <span>💾 {design.savesCount || 0}</span>
+                      <span>👁️ {design.views || 0}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

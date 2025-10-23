@@ -33,6 +33,17 @@ const createDesignSchema = Joi.object({
   }).required(),
 });
 
+const querySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20),
+  category: Joi.string().valid('dress', 'jewellery', 'shoes').optional(),
+  search: Joi.string().max(100).optional(),
+  userId: Joi.string().optional(),
+  sortBy: Joi.string().valid('createdAt', 'likes', 'views', 'saves').default('createdAt'),
+  sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+  tags: Joi.string().optional()
+});
+
 // ============================================
 // ✅ Main Handler
 // ============================================
@@ -87,8 +98,7 @@ async function getDesigns(req, res) {
           });
         }
 
-        const { page, limit, category, search, userId, sortBy, sortOrder, tags } =
-          value;
+        const { page, limit, category, search, userId, sortBy, sortOrder, tags } = value;
         const skip = (page - 1) * limit;
 
         let query = { isPublic: true };
@@ -120,6 +130,9 @@ async function getDesigns(req, res) {
         } else {
           sort[sortBy] = sortOrder === "asc" ? 1 : -1;
         }
+
+        console.log('🔍 Design query:', JSON.stringify(query));
+        console.log('📊 Sort:', JSON.stringify(sort));
 
         const designs = await Design.aggregate([
           { $match: query },
@@ -165,6 +178,8 @@ async function getDesigns(req, res) {
         const totalItems = await Design.countDocuments(query);
         const totalPages = Math.ceil(totalItems / limit);
 
+        console.log(`✅ Found ${designs.length} designs (total: ${totalItems})`);
+
         res.status(200).json({
           success: true,
           data: {
@@ -202,9 +217,11 @@ async function createDesign(req, res) {
   return new Promise((resolve) => {
     authenticateToken(req, res, async () => {
       try {
+        console.log('📥 Received design data:', JSON.stringify(req.body, null, 2));
+
         const { error, value } = createDesignSchema.validate(req.body);
         if (error) {
-          console.log("Design validation failed:", req.body, error.details);
+          console.log("❌ Design validation failed:", error.details);
           return res.status(400).json({
             success: false,
             error: {
@@ -229,13 +246,18 @@ async function createDesign(req, res) {
           if (!hasPrimary) designData.images[0].isPrimary = true;
         }
 
+        console.log('💾 Saving design to database...');
         const design = new Design(designData);
         await design.save();
+
+        console.log('✅ Design saved with ID:', design._id);
 
         await design.populate(
           "userId",
           "firstName lastName username companyName userType profilePicture companyLogo"
         );
+
+        console.log('✅ Design created successfully!');
 
         res.status(201).json({
           success: true,
@@ -244,7 +266,7 @@ async function createDesign(req, res) {
         });
         resolve();
       } catch (error) {
-        console.error("Create design error:", error);
+        console.error("❌ Create design error:", error);
         res.status(500).json({
           success: false,
           error: {
